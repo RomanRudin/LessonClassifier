@@ -4,7 +4,6 @@ if __name__ == "__main__":
         from schedule import save, schedule
         from PyQt5.QtWidgets import QApplication
         from sys import argv, exit
-        from json import load
     except ImportError:
         print('Файлы программы повреждены. Обратитесь к разработчику.')
         
@@ -13,8 +12,6 @@ if __name__ == "__main__":
 
 
     try:
-        with open('data.json', 'r', encoding='utf-8') as file:
-            schedule = {}#load(file)
         with open('style.qss', 'r', encoding='utf-8') as file:                     
             app.setStyleSheet(file.read())
     except FileNotFoundError:
