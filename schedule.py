@@ -1,7 +1,8 @@
 from json import dump, load
 
 #
-day_order = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Субботы']
+day_order = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+form_order = ["5", "6", "7", "8", "9'", "10", "11"]
 
 #
 try:
@@ -45,14 +46,15 @@ format_week = {'Понедельник': {
         }}
 
 #
-format = {5:  format_week.copy(),
-          7:  format_week.copy(),
-          8:  format_week.copy(),
-          9:  format_week.copy(),
-          10: format_week.copy(),
-          11: format_week.copy()}
+format = {"5":  format_week.copy(),
+          "6":  format_week.copy(),
+          "7":  format_week.copy(),
+          "8":  format_week.copy(),
+          "9":  format_week.copy(),
+          "10": format_week.copy(),
+          "11": format_week.copy()}
 
 #
 def save():
     with open('data.json', 'w', encoding='utf-8') as file:
-        dump(schedule, file, sort_keys=True, ensure_ascii=False)
+        dump(schedule, file, sort_keys=False, ensure_ascii=False)

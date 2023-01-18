@@ -1,0 +1,49 @@
+QWidget {
+    font: 12pt normal;
+    font-weight: normal;
+}
+
+
+
+QComboBox {
+    border: 2px solid gray;
+    padding: 1px 18px 1px 3px;
+    text-align: center;
+}
+QComboBox:on {
+    color: "blue"
+}
+QComboBox:drop-down {
+    color: "yellow"
+}
+
+
+
+QPushButton {
+    border: 20px "gray";
+    background-color: rgba(0, 0, 0, 0.62)
+}
+QPushButton:hover {
+    border: 20px "white";
+}
+QPushButton:pressed {
+    
+}
+
+
+
+QListWidget {
+
+}
+
+
+
+QLineEdit {
+
+}
+
+
+
+QLabel {
+
+}
