@@ -1,5 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QListWidget, QHBoxLayout, QVBoxLayout, QComboBox, QSizePolicy, QLineEdit
-import matplotlib
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
+from PyQt5.QtCore import Qt
 from schedule import save, schedule, format, format_week, day_order, form_order
 from json import load
 #TODO from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -84,7 +87,7 @@ class Window(QWidget):
 
         #
         self.combo_day = QComboBox()
-        self.combo_day.addItems(format_week.keys())
+        self.combo_day.addItems(format_week["week"].keys())
         self.combo_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.combo_day.setObjectName('combo_day')
         
@@ -92,11 +95,25 @@ class Window(QWidget):
         self.label_day = QLabel('')
         self.label_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.label_day.setObjectName('label_day')
+        
 
-        #
-        self.plot = QLabel('')
-        self.plot.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.plot.setObjectName('plot')
+
+        self.figure = plt.figure()
+        
+        # this is the Canvas Widget that
+        # displays the 'figure'it takes the
+        # 'figure' instance as a parameter to __init__
+        self.canvas = FigureCanvas(self.figure)
+  
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
+
+
+        self.result = QLabel('0')
+        self.result.setAlignment(Qt.AlignHCenter)
+        self.result.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.result.setObjectName('result')
 
 
         #layouts
@@ -128,17 +145,19 @@ class Window(QWidget):
         layout_main.addLayout(layout_form, stretch=2)
         layout_main.addLayout(layout_day, stretch=2)
         layout_main.addLayout(self.layout_schedule, stretch=10)
-        layout_main.addWidget(self.plot, stretch=5)
+        layout_main.addWidget(self.result, stretch=1)
+        layout_main.addWidget(self.toolbar, stretch=1)
+        layout_main.addWidget(self.canvas, stretch=5)
 
 
         #connectings
         self.list_of_saved.itemClicked.connect(self.update)
         self.button_next_form.clicked.connect(lambda: self.set_form('next'))
-        self.combo_form.activated[str].connect(lambda: self.set_form('choose'))
         self.button_previous_form.clicked.connect(lambda: self.set_form('previous'))
+        self.combo_form.activated[str].connect(lambda: self.set_form('choose'))
         self.button_next_day.clicked.connect(lambda: self.set_day('next'))
-        self.combo_day.activated[str].connect(lambda: self.set_day('choose'))
         self.button_previous_day.clicked.connect(lambda: self.set_day('previous'))
+        self.combo_day.activated[str].connect(lambda: self.set_day('choose'))
         self.edit_add.editingFinished.connect(self.set_visible)
         self.button_add.clicked.connect(self.add_conffig)
         self.button_delete.clicked.connect(self.delete_config)
@@ -152,6 +171,20 @@ class Window(QWidget):
     '''
     
     '''
+
+    #
+    def plot(self) -> None:
+        # clearing old figure
+        self.figure.clear()
+  
+        # create an axis
+        ax = self.figure.add_subplot(111)
+  
+        # plot data
+        ax.plot(day_order, self.result_data)
+  
+        # refresh canvas
+        self.canvas.draw()
 
     #Method eneables and disables all the buttons
     def enabling(self, enabled: bool) -> None:
@@ -183,7 +216,7 @@ class Window(QWidget):
         if lesson != ' ':
             lesson_combo.setCurrentText(lesson)
             difficulty.setText(str(self.lessons[self.form][lesson]))
-        lesson_combo.activated[str].connect(lambda: self.saving(lesson_layout))
+        lesson_combo.currentIndexChanged[str].connect(lambda: self.saving(lesson_layout))
         #
         indexer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         indexer.setObjectName('indexer')
@@ -226,16 +259,18 @@ class Window(QWidget):
     
     #
     def lessons_update(self) -> None:
-        key_crutch = list(map(int, schedule[self.selected][self.form][self.day].keys()))
+        key_crutch = list(map(int, schedule[self.selected][self.form]["week"][self.day].keys()))
         key_crutch.append(0)
         return max(key_crutch)
 
     #
     def saving(self, lesson_layout: QHBoxLayout) -> None:
         index, lesson_combo, difficulty = lesson_layout.itemAt(0).widget(), lesson_layout.itemAt(1).widget(), lesson_layout.itemAt(2).widget()
-        schedule[self.selected][self.form][self.day][index.text()] = lesson_combo.currentText()
+        schedule[self.selected][self.form]["week"][self.day][index.text()] = lesson_combo.currentText()
+        schedule[self.selected][self.form]["result"] = self.result_data
         difficulty.setText(str(self.lessons[self.form][lesson_combo.currentText()]))
         save()
+        self.count_result()
 
     #
     def add_lesson(self, lesson_layout: QHBoxLayout) -> None:
@@ -250,6 +285,7 @@ class Window(QWidget):
         label.setText(str(index + 2))
         lesson_combo.setCurrentIndex(0)
         self.lesson_deleting(button, just_check=True)
+        self.count_result()
 
     #
     def lesson_deleting(self, button: QPushButton, just_check: bool) -> None:
@@ -259,7 +295,7 @@ class Window(QWidget):
         if not just_check:
             if counter >= 0:
                 deleted = self.layout_schedule.itemAt(counter).layout()
-                schedule[self.selected][self.form][self.day].pop(deleted.itemAt(0).widget().text())
+                schedule[self.selected][self.form]["week"][self.day].pop(deleted.itemAt(0).widget().text())
                 self.deleteItemsOfLayout(deleted)
                 deleted.setParent(None)
                 save()
@@ -285,20 +321,33 @@ class Window(QWidget):
     def update(self) -> None:
         self.selected = self.list_of_saved.selectedItems()[0].text()
         self.enabling(True)
+        self.set_form("previous")
+        self.set_form("next")
         self.show_list()
 
     #
     def show_list(self) -> None:
         self.hide_list()
         index = 0
-        for index, lesson in schedule[self.selected][self.form][self.day].items():
+        for index, lesson in schedule[self.selected][self.form]["week"][self.day].items():
             self.layout_schedule.addLayout(self.lesson_in_list(int(index), lesson), stretch=1)
         self.new_in_list()
         self.space = 8 - int(index)
         if self.space >= 1:
             self.layout_schedule.addWidget(QLabel(), stretch=self.space)
-
-    def hide_list(self):
+        self.count_result()
+    
+    #
+    def count_result(self) -> None:
+        difficulty_of_the_day = 0
+        for lesson in schedule[self.selected][self.form]["week"][self.day].values():
+            difficulty_of_the_day += self.lessons[self.form][lesson]
+        self.result.setText(str(difficulty_of_the_day))
+        self.result_data[day_order.index(self.day)] = difficulty_of_the_day
+        self.plot()
+        
+    #
+    def hide_list(self) -> None:
         for i in reversed(range(self.layout_schedule.count())): 
             self.deleteItemsOfLayout(self.layout_schedule.takeAt(i).layout())
 
@@ -327,6 +376,8 @@ class Window(QWidget):
         else:
             self.form = self.combo_form.currentText()
         self.combo_form.setCurrentText(str(self.form))
+        self.result_data = schedule[self.selected][self.form]["result"]
+        self.show_list()
         
 
     #
