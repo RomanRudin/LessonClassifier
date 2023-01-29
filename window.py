@@ -193,9 +193,10 @@ class Window(QWidget):
     # Creates a layout with lesson information. Called inside show_list() or when a new lesson is added to the schedule.
     def lesson_in_list(self, index:int, lesson: str) -> QHBoxLayout:
         '''
-        Items in list_schedule are horisontal layouts with two widgets: 
-        first one is QLabel with index (number) of lesson, 
+        Items in list_schedule are horisontal layouts with three widgets: 
+        the first one is QLabel with index (number) of lesson, 
         the second is QCOmboBox with all possible lessons as items and saved one as current
+        the third is QLabel with difficulty of the chosen lesson
         '''
         # layout as item
         lesson_layout = QHBoxLayout()

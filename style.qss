@@ -1,12 +1,14 @@
 QWidget {
     font: 12pt normal;
     font-weight: normal;
+    background-color: rgb(242, 241, 240)
 }
 
 
 
 QComboBox {
-    border: 2px solid gray;
+    border: 3px;
+    border-color: rgb(255, 255, 255);
     padding: 1px 18px 1px 3px;
     text-align: center;
 }
@@ -21,13 +23,14 @@ QComboBox:drop-down {
 
 QPushButton {
     border: 20px "gray";
-    background-color: rgba(0, 0, 0, 0.62)
+    background-color: rgb(66, 65, 63);
+    font: rgb(211, 296, 286)
 }
 QPushButton:hover {
     border: 20px "white";
 }
 QPushButton:pressed {
-    
+    background-color: rgb(59, 58, 56)
 }
 
 
