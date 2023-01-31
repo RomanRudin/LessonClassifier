@@ -124,7 +124,7 @@ class Window(QWidget):
         self.button_delete.clicked.connect(self.__delete_config)
 
         # Disabling all the buttons
-        self.enabling(False)
+        self.__enabling(False)
 
         # Setting main layout
         self.setLayout(layout_main)
@@ -133,19 +133,20 @@ class Window(QWidget):
     
     '''
 
-    # Creates a full-featured plot at the bottom of the application. Called when the schedule layout is updated.
-    def plot(self) -> None:
-        # Clearing old figure
-        self.figure.clear()
-        # Creating an axis
-        ax = self.figure.add_subplot(111)
-        # Plot data
-        ax.plot(day_order, self.result_data)
-        # Refreshing canvas
-        self.canvas.draw()
+
+    # Saves everything. Called when a new lesson is added or an existing lesson is deleted.
+    def __saving(self, lesson_layout: QHBoxLayout) -> None:
+        index, lesson_combo, difficulty = lesson_layout.itemAt(0).widget(), lesson_layout.itemAt(1).widget(), lesson_layout.itemAt(2).widget()
+        schedule[self.selected][self.form]["week"][self.day][index.text()] = lesson_combo.currentText()
+        schedule[self.selected][self.form]["result"] = self.result_data
+        difficulty.setText(str(self.lessons[self.form][lesson_combo.currentText()]))
+        save()
+        self.__count_result()
+
+
 
     # Eneables and disables all the buttons.
-    def enabling(self, enabled: bool) -> None:
+    def __enabling(self, enabled: bool) -> None:
         self.button_next_day.setEnabled(enabled)
         self.combo_day.setEnabled(enabled)
         self.button_previous_day.setEnabled(enabled)
@@ -154,10 +155,40 @@ class Window(QWidget):
         self.button_previous_form.setEnabled(enabled)
         self.button_delete.setEnabled(enabled)
 
+    # Changes availability of the 'create configuration' button if the input line has been edited.
+    def __set_visible(self) -> None:
+        if self.edit_add.text() != '':
+            self.button_add.setEnabled(True)
+
+    # Updates the application when the configuration has been changed. Can be called when the user selects a configuration.
+    def __update(self) -> None:
+        self.selected = self.list_of_saved.selectedItems()[0].text()
+        self.__enabling(True)
+        self.__set_form('next')
         
-    
+
+
+    # Constructs the schedule layout. Called when a new schedule is displayed or when the schedule is updated.
+    def __show_list(self) -> None:
+        self.__hide_list()
+        index = 0
+        for index, lesson in schedule[self.selected][self.form]["week"][self.day].items():
+            self.layout_schedule.addLayout(self.__lesson_in_list(int(index), lesson), stretch=1)
+        self.__new_in_list()
+        self.space = 8 - int(index)
+        if self.space >= 1:
+            self.layout_schedule.addWidget(QLabel(), stretch=self.space)
+        self.__count_result()
+        
+    # Deletes everything from the schedule (to then update or close it). Called when a new schedule is displayed or when a selected configuration is deleted.
+    def __hide_list(self) -> None:
+        for i in reversed(range(self.layout_schedule.count())): 
+            self.__delete_items_of_layout(self.layout_schedule.takeAt(i).layout())
+
+
+
     # Creates a layout with lesson information. Called inside __show_list() or when a new lesson is added to the schedule.
-    def lesson_in_list(self, index:int, lesson: str) -> QHBoxLayout:
+    def __lesson_in_list(self, index:int, lesson: str) -> QHBoxLayout:
         '''
         Items in list_schedule are horisontal layouts with three widgets: 
         the first one is QLabel with index (number) of lesson, 
@@ -243,28 +274,46 @@ class Window(QWidget):
         debutton.setStyleSheet('''
             border: 2px solid red;
             background-color: rgb(247, 247, 247)''')
+
+
+
+    # Changes the form that is currently displayed to the selected form. Can be called by form navigation buttons and combo boxes.
+    def __set_form(self, mode) -> None:
+        if mode == "next":
+            self.form = form_order[(form_order.index(self.form) + 1) % len(form_order)]
+        elif mode == 'previous':
+            self.form = form_order[form_order.index(self.form) - 1]
+        else:
+            self.form = self.combo_form.currentText()
+        self.combo_form.setCurrentText(str(self.form))
+        self.result_data = schedule[self.selected][self.form]["result"]
+        self.__show_list()
+
+    # Changes the day currently displayed to the selected day. Can be invoked with the day navigation buttons and combo boxes.
+    def __set_day(self, mode) -> None:
+        if mode == "next":
+            self.day = day_order[(day_order.index(self.day) + 1) % len(day_order)]
+        elif mode == 'previous':
+            self.day = day_order[day_order.index(self.day) - 1]
+        else:
+            self.day = self.combo_day.currentText()
+        self.combo_day.setCurrentText(self.day)
+        self.__show_list()
+
     
+
     # Returns the maximum index of the existing lessons. Called when the schedule bar is updated.
     def __lessons_update(self) -> int:
         key_crutch = list(map(int, schedule[self.selected][self.form]["week"][self.day].keys()))
         key_crutch.append(0)
         return max(key_crutch)
 
-    # Saves everything. Called when a new lesson is added or an existing lesson is deleted.
-    def __saving(self, lesson_layout: QHBoxLayout) -> None:
-        index, lesson_combo, difficulty = lesson_layout.itemAt(0).widget(), lesson_layout.itemAt(1).widget(), lesson_layout.itemAt(2).widget()
-        schedule[self.selected][self.form]["week"][self.day][index.text()] = lesson_combo.currentText()
-        schedule[self.selected][self.form]["result"] = self.result_data
-        difficulty.setText(str(self.lessons[self.form][lesson_combo.currentText()]))
-        save()
-        self.__count_result()
-
     # Adds a new lesson to the end of the schedule. Can be called by a QComboBox on the toolbar at the bottom of the schedule.
     def __add_lesson(self, lesson_layout: QHBoxLayout) -> None:
         label, lesson_combo, button = lesson_layout.itemAt(0).widget(), lesson_layout.itemAt(1).widget(), lesson_layout.itemAt(2).widget()
         index = self.__lessons_update()
         if index <= 8:
-            new_lesson =  self.lesson_in_list(index + 1, lesson_combo.currentText())
+            new_lesson =  self.__lesson_in_list(index + 1, lesson_combo.currentText())
             self.__saving(new_lesson)
             self.layout_schedule.insertLayout(index, new_lesson, stretch=1)
             if self.space > 0:
@@ -304,25 +353,9 @@ class Window(QWidget):
                     widget.setParent(None)
                 else:
                     self.__delete_items_of_layout(item.layout())
-
-    # Updates the application when the configuration has been changed. Can be called when the user selects a configuration.
-    def __update(self) -> None:
-        self.selected = self.list_of_saved.selectedItems()[0].text()
-        self.enabling(True)
-        self.__set_form('next')
-
-    # Constructs the schedule layout. Called when a new schedule is displayed or when the schedule is updated.
-    def __show_list(self) -> None:
-        self.__hide_list()
-        index = 0
-        for index, lesson in schedule[self.selected][self.form]["week"][self.day].items():
-            self.layout_schedule.addLayout(self.lesson_in_list(int(index), lesson), stretch=1)
-        self.__new_in_list()
-        self.space = 8 - int(index)
-        if self.space >= 1:
-            self.layout_schedule.addWidget(QLabel(), stretch=self.space)
-        self.__count_result()
     
+
+
     # Writes a summary of the difficulties of all the lessons. Called when a new schedule is displayed or when the schedule is updated.
     def __count_result(self) -> None:
         difficulty_of_the_day = 0
@@ -330,12 +363,9 @@ class Window(QWidget):
             difficulty_of_the_day += self.lessons[self.form][lesson]
         self.result.setText(str(difficulty_of_the_day))
         self.result_data[day_order.index(self.day)] = difficulty_of_the_day
-        self.plot()
-        
-    # Deletes everything from the schedule (to then update or close it). Called when a new schedule is displayed or when a selected configuration is deleted.
-    def __hide_list(self) -> None:
-        for i in reversed(range(self.layout_schedule.count())): 
-            self.__delete_items_of_layout(self.layout_schedule.takeAt(i).layout())
+        self.__plot()
+
+
 
     # Creates a new configuration. Can be called with the 'create configuration' button after editing the input line
     def __add_conffig(self) -> None:
@@ -349,35 +379,19 @@ class Window(QWidget):
     def __delete_config(self) -> None:
         schedule.pop(self.list_of_saved.selectedItems()[0].text())
         self.list_of_saved.takeItem(self.list_of_saved.selectedIndexes()[0].row())
-        self.enabling(False)
+        self.__enabling(False)
         self.__hide_list()
         save()
 
-    # Changes the form that is currently displayed to the selected form. Can be called by form navigation buttons and combo boxes.
-    def __set_form(self, mode) -> None:
-        if mode == "next":
-            self.form = form_order[(form_order.index(self.form) + 1) % len(form_order)]
-        elif mode == 'previous':
-            self.form = form_order[form_order.index(self.form) - 1]
-        else:
-            self.form = self.combo_form.currentText()
-        self.combo_form.setCurrentText(str(self.form))
-        self.result_data = schedule[self.selected][self.form]["result"]
-        self.__show_list()
-        
 
-    # Changes the day currently displayed to the selected day. Can be invoked with the day navigation buttons and combo boxes.
-    def __set_day(self, mode) -> None:
-        if mode == "next":
-            self.day = day_order[(day_order.index(self.day) + 1) % len(day_order)]
-        elif mode == 'previous':
-            self.day = day_order[day_order.index(self.day) - 1]
-        else:
-            self.day = self.combo_day.currentText()
-        self.combo_day.setCurrentText(self.day)
-        self.__show_list()
 
-    # Changes availability of the 'create configuration' button if the input line has been edited.
-    def __set_visible(self) -> None:
-        if self.edit_add.text() != '':
-            self.button_add.setEnabled(True)
+    # Creates a full-featured plot at the bottom of the application. Called when the schedule layout is updated.
+    def __plot(self) -> None:
+        # Clearing old figure
+        self.figure.clear()
+        # Creating an axis
+        ax = self.figure.add_subplot(111)
+        # Plot data
+        ax.plot(day_order, self.result_data)
+        # Refreshing canvas
+        self.canvas.draw()
