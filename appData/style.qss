@@ -1,0 +1,55 @@
+QWidget {
+    font: 16pt normal;
+    font-family: arial;
+    background-color: rgb(230, 230, 230);
+    text-align: center
+}
+
+
+
+QComboBox {
+    border: 3px solid black;
+    padding: 1px 18px 1px 3px;
+    text-align: center
+}
+QComboBox:on {
+    color: "red";
+}
+QComboBox:drop-down {
+    color: "yellow"
+}
+
+
+
+QPushButton {
+    border: 2px rgb(216, 16, 36);
+    border-radius: 2px;
+    background-color: rgb(115, 115, 115);
+    color: rgb(211, 196, 186)
+}
+QPushButton:hover {
+    background-color: rgb(100, 100, 100)
+}
+QPushButton:pressed {
+    background-color: rgb(90, 90, 90);
+    outline: 2px
+}
+
+
+
+QListWidget {
+
+}
+
+
+
+QLineEdit {
+    
+}
+
+
+
+QLabel#result {
+    font: 24pt normal;
+    color: red
+}

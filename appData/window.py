@@ -3,18 +3,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt
-from schedule import save, schedule, format, format_week, day_order, form_order
-from json import load
-#TODO from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-#TODO from matplotlib.figure import Figure
+from appData.schedule import save, schedule, format, format_week, day_order, form_order
+from json import load     
 
-
-#TODO class MplCanvas(FigureCanvasQTAgg):
-#TODO 
-#TODO     def __init__(self, parent=None, width=5, height=4, dpi=100):
-#TODO         fig = Figure(figsize=(width, height), dpi=dpi)
-#TODO         self.axes = fig.add_subplot(111)
-#TODO         
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -24,80 +15,54 @@ class Window(QWidget):
 
         #valuables
         self.selected = ''
-        self.form = "5"
+        self.form = "11"
         self.day = 'Понедельник'
         self.space = 0
 
-        with open('lessons.json', 'r', encoding='utf-8') as file:
+        with open(r'appData\lessons.json', 'r', encoding='utf-8') as file:
             self.lessons = load(file)
 
         #widgets
         #
-        label_main = QLabel('')
-        label_main.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        label_main.setObjectName('label')
-
-        #
         self.list_of_saved = QListWidget()
         self.list_of_saved.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.list_of_saved.setObjectName('list_of_saved')
         for config in schedule.keys():
             self.list_of_saved.addItem(str(config))
 
         #
         self.edit_add = QLineEdit()
         self.edit_add.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.edit_add.setObjectName('button_list')
 
         #
         self.button_add = QPushButton('Добавить')
         self.button_delete = QPushButton('Удалить')
         self.button_add.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_delete.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.button_add.setObjectName('button_list')
-        self.button_delete.setObjectName('button_list')
         self.button_add.setDisabled(True)
-
-        ##
-        #label_form = QLabel('Выберите класс:')
-        #label_form.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        #label_form.setObjectName('label_form')
 
         #
         self.button_previous_form = QPushButton('Предыдущий класс')
         self.button_next_form = QPushButton('Следующий класс')
         self.button_previous_form.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_next_form.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.button_previous_form.setObjectName('button_day')
-        self.button_next_form.setObjectName('button_day')
 
         #
         self.combo_form = QComboBox()
         self.combo_form.addItems(self.lessons.keys())
         self.combo_form.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.combo_form.setObjectName('combo_form')
 
         #
         self.button_previous_day = QPushButton('Предыдущий день')
         self.button_next_day = QPushButton('Следующий день')
         self.button_previous_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_next_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.button_previous_day.setObjectName('button_day')
-        self.button_next_day.setObjectName('button_day')
 
         #
         self.combo_day = QComboBox()
         self.combo_day.addItems(format_week["week"].keys())
         self.combo_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.combo_day.setObjectName('combo_day')
         
-        ##
-        #self.label_day = QLabel('')
-        #self.label_day.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        #self.label_day.setObjectName('label_day')
-        
-
-
+        #
         self.figure = plt.figure()
         
         # This is the Canvas Widget that displays the 'figure'. It takes the 'figure' instance as a parameter to __init__.
@@ -106,7 +71,7 @@ class Window(QWidget):
         # This is the Navigation widget. Takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-
+        #
         self.result = QLabel('0')
         self.result.setAlignment(Qt.AlignHCenter)
         self.result.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -135,15 +100,15 @@ class Window(QWidget):
         layout_day.addWidget(self.button_next_day, stretch=1)
 
         # Layout_main.addWidget(label_main, stretch=1)
-        layout_main.addWidget(self.list_of_saved, stretch=3)
-        layout_main.addWidget(self.edit_add, stretch=1)
-        layout_main.addLayout(layout_list, stretch=1)
-        layout_main.addLayout(layout_form, stretch=2)
-        layout_main.addLayout(layout_day, stretch=2)
-        layout_main.addLayout(self.layout_schedule, stretch=10)
+        layout_main.addWidget(self.list_of_saved, stretch=4)
+        layout_main.addWidget(self.edit_add, stretch=2)
+        layout_main.addLayout(layout_list, stretch=3)
+        layout_main.addLayout(layout_form, stretch=4)
+        layout_main.addLayout(layout_day, stretch=4)
+        layout_main.addLayout(self.layout_schedule, stretch=25)
         layout_main.addWidget(self.result, stretch=1)
-        layout_main.addWidget(self.toolbar, stretch=1)
-        layout_main.addWidget(self.canvas, stretch=5)
+        layout_main.addWidget(self.toolbar, stretch=2)
+        layout_main.addWidget(self.canvas, stretch=11)
 
 
         # Connectings events to methods
@@ -188,6 +153,7 @@ class Window(QWidget):
         self.combo_form.setEnabled(enabled)
         self.button_previous_form.setEnabled(enabled)
         self.button_delete.setEnabled(enabled)
+
         
     
     # Creates a layout with lesson information. Called inside show_list() or when a new lesson is added to the schedule.
@@ -213,15 +179,35 @@ class Window(QWidget):
         lesson_combo.currentIndexChanged[str].connect(lambda: self.saving(lesson_layout))
         # Renaming and changing size policy of those widgets
         indexer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        indexer.setObjectName('indexer')
         lesson_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        lesson_combo.setObjectName('lesson_combo')
         difficulty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        difficulty.setObjectName('difficulty')
         # Adding widgets to layout
         lesson_layout.addWidget(indexer, stretch=1)
         lesson_layout.addWidget(lesson_combo, stretch=22)
         lesson_layout.addWidget(difficulty, stretch=2)
+        #
+        if index % 2 == 0:
+            indexer.setStyleSheet('''
+                background-color: rgb(255, 255, 255);
+                border: 2px solid black''')
+            lesson_combo.setStyleSheet('''
+                background-color: rgb(255, 255, 255);
+                border: 2px solid black''')
+            difficulty.setStyleSheet('''
+                background-color: rgb(255, 255, 255);
+                border: 2px solid black;
+                color: red''')
+        else:
+            indexer.setStyleSheet('''
+                background-color: rgb(195, 195, 195);
+                border: 2px solid black''')
+            lesson_combo.setStyleSheet('''
+                background-color: rgb(195, 195, 195);
+                border: 2px solid black''')
+            difficulty.setStyleSheet('''
+                background-color: rgb(195, 195, 195);
+                border: 2px solid black;
+                color: red''')
         return lesson_layout
 
     # Creates a layout with tools for adding and removing lessons. Called by show_list()
@@ -241,16 +227,22 @@ class Window(QWidget):
         lesson_combo.activated[str].connect(lambda: self.add_lesson(lesson_layout))
         # Renaming and changing size policy of those widgets
         indexer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        indexer.setObjectName('indexer')
         lesson_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        lesson_combo.setObjectName('debutton')
         debutton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        debutton.setObjectName('debutton')
         # Adding widgets to layout
         lesson_layout.addWidget(indexer, stretch=1)
         lesson_layout.addWidget(lesson_combo, stretch=15)
         lesson_layout.addWidget(debutton, stretch=9)
         self.layout_schedule.addLayout(lesson_layout, stretch=1)
+        indexer.setStyleSheet('''
+            background-color: rgb(174, 174, 174);
+            border: 2px solid black''')
+        lesson_combo.setStyleSheet('''
+            background-color: rgb(174, 174, 174);
+            border: 2px solid black''')
+        debutton.setStyleSheet('''
+            border: 2px solid red;
+            background-color: rgb(247, 247, 247)''')
     
     # Returns the maximum index of the existing lessons. Called when the schedule bar is updated.
     def lessons_update(self) -> int:
@@ -271,16 +263,17 @@ class Window(QWidget):
     def add_lesson(self, lesson_layout: QHBoxLayout) -> None:
         label, lesson_combo, button = lesson_layout.itemAt(0).widget(), lesson_layout.itemAt(1).widget(), lesson_layout.itemAt(2).widget()
         index = self.lessons_update()
-        new_lesson =  self.lesson_in_list(index + 1, lesson_combo.currentText())
-        self.saving(new_lesson)
-        self.layout_schedule.insertLayout(index, new_lesson, stretch=1)
-        if self.space > 0:
-            self.space -= 1
-            self.layout_schedule.setStretch(index + 2, self.space)
-        label.setText(str(index + 2))
-        lesson_combo.setCurrentIndex(0)
-        self.lesson_deleting(button, just_check=True)
-        self.count_result()
+        if index <= 8:
+            new_lesson =  self.lesson_in_list(index + 1, lesson_combo.currentText())
+            self.saving(new_lesson)
+            self.layout_schedule.insertLayout(index, new_lesson, stretch=1)
+            if self.space > 0:
+                self.space -= 1
+                self.layout_schedule.setStretch(index + 2, self.space)
+            label.setText(str(index + 2))
+            lesson_combo.setCurrentIndex(0)
+            self.lesson_deleting(button, just_check=True)
+            self.count_result()
 
     # Removes the last lesson from the schedule. Can be called with the "Delete" button on the schedule toolbar.
     def lesson_deleting(self, button: QPushButton, just_check: bool) -> None:
@@ -316,9 +309,7 @@ class Window(QWidget):
     def update(self) -> None:
         self.selected = self.list_of_saved.selectedItems()[0].text()
         self.enabling(True)
-        self.set_form("previous")
-        self.set_form("next")
-        self.show_list()
+        self.set_form('next')
 
     # Constructs the schedule layout. Called when a new schedule is displayed or when the schedule is updated.
     def show_list(self) -> None:
@@ -390,4 +381,3 @@ class Window(QWidget):
     def set_visible(self) -> None:
         if self.edit_add.text() != '':
             self.button_add.setEnabled(True)
-    

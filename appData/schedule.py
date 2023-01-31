@@ -6,7 +6,7 @@ form_order = ["5", "6", "7", "8", "9", "10", "11"]
 
 #
 try:
-    with open('data.json', 'r', encoding='utf-8') as file:
+    with open(r'appData\userData\data.json', 'r', encoding='utf-8') as file:
         schedule = load(file)
 except ImportError:
     print()
@@ -60,5 +60,5 @@ format = {"5":  format_week.copy(),
 
 #
 def save():
-    with open('data.json', 'w', encoding='utf-8') as file:
+    with open(r'appData\userData\data.json', 'w', encoding='utf-8') as file:
         dump(schedule, file, sort_keys=False, ensure_ascii=False, indent=4)

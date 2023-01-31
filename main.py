@@ -1,21 +1,15 @@
 if __name__ == "__main__":
-    try:
-        from window import Window
-        from schedule import save, schedule
-        from PyQt5.QtWidgets import QApplication
-        from sys import argv, exit
-    except ImportError:
-        print('Файлы программы повреждены. Обратитесь к разработчику.')
+    from appData.window import Window
+    from appData.schedule import save, schedule
+    from sys import argv, exit
+    from PyQt5.QtWidgets import QApplication
         
 
     app = QApplication([argv]) 
 
-
-    try:
-        with open('style.qss', 'r', encoding='utf-8') as file:                     
-            app.setStyleSheet(file.read())
-    except FileNotFoundError:
-        print('Файлы программы повреждены. Обратитесь к разработчику.')
+    
+    with open(r'appData\style.qss', 'r', encoding='utf-8') as file:                     
+        app.setStyleSheet(file.read())
 
 
     main = Window()
@@ -24,5 +18,6 @@ if __name__ == "__main__":
 
 
     main.show()
+    main.showMaximized()
     
     exit(app.exec_())
